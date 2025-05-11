@@ -1,9 +1,10 @@
 import cv2
-import cv2.data
 
-face_cascade = cv2.CascadeClassifier(cv2.data.haarcascades + 'haarcascade_frontalface_default.xml')
+haar = cv2.CascadeClassifier(cv2.data.haarcascades + 'haarcascade_frontalface_default.xml')
 
-if face_cascade.empty():
+net = cv2.dnn.readNetFromCaffe('deploy.prototxt','res10_300x300_ssd_iter_140000.caffemedel')
+
+if haar.empty():
     print("face cascade error")
 else:
     print("success")
@@ -23,10 +24,17 @@ while True:
 
     gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
 
-    faces = face_cascade.detectMultiScale(gray, scaleFactor=1.1, minNeighbors=5)
+    haar_faces = haar.detectMultiScale(gray, scaleFactor=1.1, minNeighbors=5)
 
-    for (x,y,w,h) in faces:
-        cv2.rectangle(frame, (x,y), (x+w,y+h), (0,255,0),2)
+    for (x, y, w, h) in haar_faces:
+        face_roi = frame[y:y+h, x:x+w]
+        blob = cv2.dnn.blobFromImage(face_roi, 1.0, (300, 300), (104, 177, 123))
+        net.setInput(blob)
+        detections = net.forward()
+
+        confidence = detections[0, 0, 0, 2]  # 첫 번째 감지 결과의 신뢰도
+        if confidence > 0.6:
+            cv2.rectangle(frame, (x, y), (x+w, y+h), (0, 255, 0), 2)
     
     cv2.imshow('Webcam View', frame)
 
