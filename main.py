@@ -23,4 +23,4 @@ while True:
     
     cv2.imshow('Webcam View', frame)
 
-    cv2.waitKey(0)
+    cv2.waitKey(1)
