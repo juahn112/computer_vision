@@ -32,7 +32,7 @@ while True:
         net.setInput(blob)
         detections = net.forward()
 
-        confidence = detections[0, 0, 0, 2]  # 첫 번째 감지 결과의 신뢰도
+        confidence = detections[0, 0, 0, 2]  
         if confidence > 0.6:
             cv2.rectangle(frame, (x, y), (x+w, y+h), (0, 255, 0), 2)
     
