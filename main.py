@@ -36,15 +36,27 @@ while True:
 
         confidence = detections[0, 0, 0, 2]  
         if confidence > 0.5:
-            flower_resized = cv2.resize(flower, (w,h))
+            scale = 1.5
+            new_w = int(w * scale)
+            new_h = int(h * scale)
+
+            x_offset = max(x - (new_w - w) // 2, 0)
+            y_offset = max(y - (new_h - h) // 2, 0)
+
+            flower_resized = cv2.resize(flower, (new_w, new_h))
 
             flower_rgb = flower_resized[:, :, :3]
-            alpha_mask = flower_resized[:,:,3] / 255.0
+            alpha = flower_resized[:, :, 3] / 255.0
 
-            for c in range(3):
-                frame[y:y+h, x:x+w, c] = (
-                    alpha_mask * flower_rgb[:,:,c]+
-                    (1-alpha_mask) * frame[y:y+h, x:x+w, c]
+            y1, y2 = y_offset, min(y_offset + new_h, frame.shape[0])
+            x1, x2 = x_offset, min(x_offset + new_w, frame.shape[1])
+            flower_part = flower_rgb[0:y2 - y1, 0:x2 - x1]
+            alpha_part = alpha[0:y2 - y1, 0:x2 - x1]
+
+            for c in range(3):  
+                frame[y1:y2, x1:x2, c] = (
+                    alpha_part * flower_part[:, :, c] +
+                    (1 - alpha_part) * frame[y1:y2, x1:x2, c]
                 )
     
     cv2.imshow('Webcam View', frame)
