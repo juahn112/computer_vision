@@ -35,7 +35,7 @@ while True:
         detections = net.forward()
 
         confidence = detections[0, 0, 0, 2]  
-        if confidence > 0.6:
+        if confidence > 0.5:
             flower_resized = cv2.resize(flower, (w,h))
 
             flower_rgb = flower_resized[:, :, :3]
