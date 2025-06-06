@@ -1,34 +1,58 @@
 import cv2
 
-haar = cv2.CascadeClassifier(cv2.data.haarcascades + 'haarcascade_frontalface_default.xml')
+front_haar = cv2.CascadeClassifier(cv2.data.haarcascades + 'haarcascade_frontalface_default.xml')
+profile_haar = cv2.CascadeClassifier(cv2.data.haarcascades + 'haarcascade_profileface.xml')
 
 net = cv2.dnn.readNetFromCaffe('deploy.prototxt','res10_300x300_ssd_iter_140000.caffemodel')
 
 flower = cv2.imread('flower.png', cv2.IMREAD_UNCHANGED)
 
-if haar.empty():
-    print("face cascade error")
-else:
+if front_haar.empty() and profile_haar.empty():
+    raise RuntimeError("both haar cascades are empty")
+elif front_haar.empty():
+    raise RuntimeError("front face cascade error")
+elif profile_haar.empty():
+    raise RuntimeError("profile face cascade error")
+else:    
     print("success")
 
 cam = cv2.VideoCapture(0)
 
 if not cam.isOpened():
-    print("cam is not opened. error")
-    exit()
+    raise RuntimeError("cam is not opened. error")
 else:
     print("cam is opened. success")
+
+def nothing(x):
+    pass
+cv2.namedWindow('Webcam View')
+cv2.createTrackbar('Exposure', 'Webcam View', 5, 100, nothing)
+
 while True:
     ret, frame = cam.read()
     if not ret:
         print("ret is False")
         break
 
+    exposure_val = cv2.getTrackbarPos("Exposure", "Webcam View")
+    mapped_exposure = -10 + (exposure_val / 100) * 9
+    cam.set(cv2.CAP_PROP_AUTO_EXPOSURE, 0.25)
+    cam.set(cv2.CAP_PROP_EXPOSURE, mapped_exposure)
+
     gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
 
-    haar_faces = haar.detectMultiScale(gray, scaleFactor=1.1, minNeighbors=5)
+    front_faces = front_haar.detectMultiScale(gray, scaleFactor=1.1, minNeighbors=5)
+    profile_faces = profile_haar.detectMultiScale(gray, scaleFactor=1.1, minNeighbors=5)
+    all_faces = list(front_faces) + list(profile_faces)
 
-    for (x, y, w, h) in haar_faces:
+    flipped_gray = cv2.flip(gray, 1)
+    flipped_faces = profile_haar.detectMultiScale(flipped_gray, scaleFactor=1.1, minNeighbors=5)
+
+    for (x, y, w, h) in flipped_faces:
+        real_x = gray.shape[1] - x - w
+        all_faces.append((real_x, y, w, h))
+
+    for (x, y, w, h) in all_faces:
         face_roi = frame[y:y+h, x:x+w]
         blob = cv2.dnn.blobFromImage(face_roi, 1.0, (300, 300), (104, 177, 123))
         net.setInput(blob)
