@@ -72,7 +72,7 @@ while True:
         confidence = detections[0, 0, 0, 2]
 
         if confidence > 0.5:
-            scale = 1.5
+            scale = 2.0
             new_w, new_h = int(w * scale), int(h * scale)
             x_offset = max(x - (new_w - w) // 2, 0)
             y_offset = max(y - (new_h - h) // 2, 0)
