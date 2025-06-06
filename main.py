@@ -40,7 +40,7 @@ while True:
     exposure_val = cv2.getTrackbarPos("Exposure", "Webcam View")
     if exposure_val != prev_exposure_val:
         mapped_exposure = max(-6, -10 + (exposure_val / 100) * 9)
-        cam.set(cv2.CAP_PROP_AUTO_EXPOSURE, 0.25)  # 수동 모드
+        cam.set(cv2.CAP_PROP_AUTO_EXPOSURE, 0.25)   
         cam.set(cv2.CAP_PROP_EXPOSURE, mapped_exposure)
         prev_exposure_val = exposure_val
 
@@ -50,6 +50,7 @@ while True:
     # 얼굴 감지
     front_faces = front_haar.detectMultiScale(gray, 1.1, 5)
     profile_faces = profile_haar.detectMultiScale(gray, 1.1, 5)
+    all_faces = list(front_faces) + list(profile_faces)
 
     # 좌측 측면 감지를 위해 이미지 좌우반전 후 탐지
     flipped_gray = cv2.flip(gray, 1)
@@ -60,8 +61,6 @@ while True:
         x = gray.shape[1] - x - w
         profile_faces = list(profile_faces)
         profile_faces.append((x, y, w, h))
-
-    all_faces = list(front_faces) + list(profile_faces)
 
     # 얼굴 위에 꽃 이미지 덮기
     for (x, y, w, h) in all_faces:
